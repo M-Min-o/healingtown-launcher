@@ -1,0 +1,303 @@
+/*******************************************************************************
+ * 힐링타운 런처 테마 (서버 UI 와 같은 남색 + 청동 픽셀 스타일)
+ *  launcher.css 위에 덮어씀. 색은 아래 변수만 바꾸면 전체가 바뀜.
+ ******************************************************************************/
+
+/* 마인크래프트 한글과 같은 유니폰트 (Unifont, SIL OFL) → 원래 글꼴 이름을 덮어써서 모든 글자에 적용 */
+@font-face { font-family: 'Avenir Book';   src: url('../fonts/unifont-ko.woff') format('woff'); }
+@font-face { font-family: 'Avenir Medium'; src: url('../fonts/unifont-ko.woff') format('woff'); }
+@font-face { font-family: 'Pixel';         src: url('../fonts/unifont-ko.woff') format('woff'); }
+
+:root {
+    --navy:      #14203f;
+    --navy-2:    #1b2a55;
+    --navy-l:    #2c4180;
+    --navy-d:    #0d1530;
+    --bronze:    #c8913e;
+    --bronze-l:  #f0c96a;
+    --bronze-d:  #7a4e1f;
+    --ink:       #2a160a;
+    --cream:     #f3e3bf;
+    --text:      #f4ead2;
+    --muted:     #a9b3d6;
+    --good:      #6fe06f;
+    --bad:       #ff6b5b;
+    /* 픽셀 테두리 (안쪽 남색 · 청동 · 바깥 진한 갈색) */
+    --frame: 0 0 0 2px var(--bronze), 0 0 0 4px var(--ink), inset 0 0 0 2px var(--navy-d);
+}
+
+* { font-smooth: never; -webkit-font-smoothing: none; }
+
+body {
+    word-break: keep-all;
+    color: var(--text);
+    background-color: var(--navy-d);
+    background-size: cover !important;
+    background-position: center bottom !important;
+    image-rendering: pixelated;
+}
+img { image-rendering: pixelated; }
+
+#main { background: linear-gradient(to top, rgba(8, 12, 28, 0.80) 0%, rgba(8, 12, 28, 0) 26%) !important; }
+/* 배경 도트 마을 (bgscene.js) */
+#bgScene { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; object-position: center bottom; image-rendering: pixelated; z-index: 0; pointer-events: none; }
+
+/* ---------------------------------------------------------------- 창 위쪽 막대 */
+#frameBar { background-color: rgba(13, 21, 48, 0.85) !important; box-shadow: 0 2px 0 var(--bronze-d), 0 4px 0 var(--ink); }
+#frameTitleText { font-size: 16px !important; color: var(--bronze-l); letter-spacing: 1px; }
+.frameButton { color: var(--cream) !important; }
+
+/* ---------------------------------------------------------------- 시작 화면: 위쪽 */
+#image_seal {
+    border: none !important;
+    border-radius: 0 !important;
+    height: 84px !important;
+    filter: drop-shadow(0 4px 0 rgba(0, 0, 0, 0.45));
+}
+#updateAvailableTooltip {
+    background: var(--navy) !important;
+    box-shadow: var(--frame);
+    border-radius: 0 !important;
+    color: var(--bronze-l) !important;
+    font-size: 16px !important;
+}
+
+#user_text {
+    font-size: 16px !important;
+    color: var(--cream);
+    text-shadow: 2px 2px 0 var(--ink) !important;
+    letter-spacing: 0 !important;
+}
+#avatarContainer {
+    border-radius: 0 !important;
+    border: none !important;
+    background-color: var(--navy) !important;
+    box-shadow: var(--frame) !important;
+    image-rendering: pixelated;
+}
+#avatarOverlay {
+    border-radius: 0 !important;
+    font-size: 16px !important;
+    color: var(--bronze-l);
+    background-color: rgba(13, 21, 48, 0.7) !important;
+}
+
+/* 오른쪽 아이콘 줄: 설정 + 디스코드만 (나머지는 숨김, _custom.toml 에 링크를 넣으면 보이게 하려면 아래 줄 삭제) */
+#linkURL, #xURL, #instagramURL, #youtubeURL { display: none !important; }
+.mediaContainer:has(> #linkURL), .mediaContainer:has(> #xURL), .mediaContainer:has(> #instagramURL), .mediaContainer:has(> #youtubeURL) { display: none !important; }
+.mediaDivider { background: var(--bronze) !important; height: 2px !important; }
+.mediaSVG { fill: var(--cream) !important; }
+.mediaURL:hover .mediaSVG, .mediaButton:hover .mediaSVG { fill: var(--bronze-l) !important; }
+#settingsTooltip {
+    background: var(--navy) !important; box-shadow: var(--frame); border-radius: 0 !important;
+    font-size: 16px !important; color: var(--bronze-l) !important;
+}
+
+/* ---------------------------------------------------------------- 시작 화면: 아래 막대 */
+#landingContainer > #lower {
+    background: linear-gradient(to top, rgba(13, 21, 48, 0.96), rgba(13, 21, 48, 0.88)) !important;
+    box-shadow: 0 -2px 0 var(--bronze), 0 -4px 0 var(--ink), inset 0 2px 0 var(--navy-l);
+    height: 22% !important;
+}
+.bot_label, #player_count, #launch_button, #server_selection_button, #newsButtonText, #user_text { white-space: nowrap; }
+.bot_label { font-size: 16px !important; letter-spacing: 0 !important; color: var(--bronze-l) !important; }
+.bot_divider { background: var(--bronze-d) !important; width: 2px !important; }
+#player_count { font-size: 16px !important; color: var(--cream) !important; letter-spacing: 0 !important; }
+/* 모장 서비스 상태는 숨기고 서버 상태만 */
+#mojangStatusWrapper, #landingContainer > #lower > #left .bot_divider { display: none !important; }
+#landingContainer > #lower > #left #content { left: 0 !important; gap: 10px; align-items: baseline; }
+#server_selection_button { max-width: 190px; overflow: hidden; text-overflow: ellipsis; text-align: left; }
+#mojangStatusTooltip {
+    background: var(--navy) !important; box-shadow: var(--frame); border-radius: 0 !important; font-size: 16px;
+}
+#mojangStatusTooltip::after { border-color: transparent var(--bronze) transparent transparent !important; }
+
+/* 공지사항 버튼 */
+#newsButton { color: var(--cream) !important; }
+#newsButtonText { font-size: 16px !important; letter-spacing: 0 !important; text-shadow: 2px 2px 0 var(--ink); }
+#newsButton .arrowLine { stroke: var(--bronze-l) !important; stroke-width: 3px !important; }
+#newsButtonAlert { background: var(--bad) !important; border-radius: 0 !important; }
+
+/* 게임 시작: 청동 테두리 남색 볼록 버튼 (서버 강화하기 버튼과 같은 느낌) */
+#landingContainer > #lower > #right #launch_content { top: 18px !important; align-items: center; }
+#launch_button {
+    font-size: 24px !important;
+    letter-spacing: 1px !important;
+    color: var(--cream) !important;
+    padding: 10px 26px 12px !important;
+    background: linear-gradient(to bottom, var(--navy-l) 0%, var(--navy-l) 45%, var(--navy-2) 46%, var(--navy) 100%) !important;
+    box-shadow:
+        inset 0 2px 0 rgba(255, 255, 255, 0.18),
+        inset 0 -4px 0 var(--navy-d),
+        0 0 0 2px var(--bronze-l),
+        0 0 0 4px var(--bronze),
+        0 0 0 6px var(--ink),
+        0 6px 0 2px var(--ink) !important;
+    text-shadow: 2px 2px 0 var(--ink) !important;
+    transition: transform 0.08s ease, filter 0.15s ease !important;
+    margin-right: 14px;
+}
+#launch_button:hover, #launch_button:focus { filter: brightness(1.15); text-shadow: 2px 2px 0 var(--ink) !important; }
+#launch_button:active { transform: translateY(3px); filter: brightness(0.95); }
+#launch_button:disabled { filter: grayscale(0.6) brightness(0.8); }
+#server_selection_button { font-size: 16px !important; color: var(--bronze-l) !important; text-shadow: 2px 2px 0 var(--ink) !important; }
+#server_selection_button:hover { color: var(--cream) !important; }
+
+/* 다운로드 진행 */
+#launch_progress_label { font-size: 22px !important; color: var(--bronze-l) !important; text-shadow: 2px 2px 0 var(--ink) !important; }
+#launch_progress[value] { height: 10px !important; box-shadow: 0 0 0 2px var(--ink), inset 0 0 0 2px var(--navy-d); background: var(--navy-d) !important; }
+#launch_progress[value]::-webkit-progress-bar { background: var(--navy-d) !important; }
+#launch_progress[value]::-webkit-progress-value { background: linear-gradient(to bottom, #8ff58f 0%, #8ff58f 40%, #3fb24a 41%, #2e8b3e 100%) !important; }
+#launch_details_text { font-size: 16px !important; color: var(--cream) !important; }
+
+/* ---------------------------------------------------------------- 공지사항 화면 */
+#newsContainer { background: rgba(13, 21, 48, 0.94) !important; }
+#newsArticleTitle { color: var(--bronze-l) !important; font-size: 22px !important; }
+#newsArticleDate, #newsArticleAuthor, #newsArticleComments, #newsNavigationStatus { color: var(--muted) !important; font-size: 16px !important; }
+#newsArticleContentScrollable { font-size: 16px !important; line-height: 24px !important; color: var(--text); }
+#newsArticleContentScrollable a { color: var(--bronze-l) !important; }
+#newsStatusContainer { box-shadow: 0 2px 0 var(--bronze-d), 0 4px 0 var(--ink); }
+.newsErrorContent { font-size: 18px !important; color: var(--cream) !important; }
+#newsErrorRetry { font-size: 16px !important; color: var(--bronze-l) !important; }
+#newsContainer .arrowLine { stroke: var(--bronze-l) !important; }
+
+/* ---------------------------------------------------------------- 공통 버튼 · 입력칸 */
+button { font-family: 'Pixel', sans-serif; }
+input, select, textarea { font-family: 'Pixel', sans-serif !important; }
+
+/* ---------------------------------------------------------------- 환영 화면 */
+#welcomeContainer { background: rgba(13, 21, 48, 0.55); }
+#welcomeContent {
+    background: var(--navy) !important;
+    box-shadow: var(--frame);
+    padding: 28px 34px 30px !important;
+}
+#welcomeContent { top: 0 !important; width: 520px !important; }
+#welcomeImageSeal { border: none !important; border-radius: 0 !important; height: 96px !important; width: 96px !important; background: none !important; box-shadow: none !important; margin: 0 0 10px !important; }
+#welcomeHeader { font-size: 24px !important; color: var(--bronze-l) !important; letter-spacing: 0 !important; text-shadow: 2px 2px 0 var(--ink); }
+#welcomeDescription { font-size: 16px !important; line-height: 24px !important; color: var(--text) !important; }
+#welcomeDescCTA { font-size: 16px !important; color: var(--good) !important; }
+#welcomeButton {
+    font-size: 18px !important; color: var(--cream) !important; letter-spacing: 0 !important;
+    padding: 8px 20px !important; margin-top: 10px;
+    background: linear-gradient(to bottom, var(--navy-l) 0%, var(--navy-l) 45%, var(--navy-2) 46%, var(--navy) 100%) !important;
+    box-shadow: 0 0 0 2px var(--bronze-l), 0 0 0 4px var(--bronze), 0 0 0 6px var(--ink) !important;
+    border: none !important; border-radius: 0 !important;
+}
+#welcomeButton .arrowLine { stroke: var(--bronze-l) !important; }
+
+/* ---------------------------------------------------------------- 로그인 */
+#loginOptionsContainer, #loginContainer { background: rgba(13, 21, 48, 0.6); }
+#loginOptionsContent, #loginContent {
+    width: 380px;
+    background: var(--navy) !important;
+    box-shadow: var(--frame);
+    padding: 26px 30px !important;
+}
+#loginOptionsTitle, #loginSubheader { font-size: 22px !important; color: var(--bronze-l) !important; letter-spacing: 0 !important; text-shadow: 2px 2px 0 var(--ink); }
+.loginOptionButton {
+    font-size: 16px !important; color: var(--cream) !important; border-radius: 0 !important;
+    background: var(--navy-2) !important; border: none !important;
+    box-shadow: 0 0 0 2px var(--bronze), 0 0 0 4px var(--ink) !important;
+    margin: 8px 0 !important;
+}
+.loginOptionButton:hover { background: var(--navy-l) !important; }
+/* 모장 계정 로그인은 더 이상 쓸 수 없음 → 숨김 */
+#loginOptionMojang, .settingsAuthAccountTypeContainer:has(#settingsAddMojangAccount) { display: none !important; }
+.loginOptionButton { white-space: nowrap; height: 46px !important; }
+#loginOptionCancelButton, #loginCancelButton { color: var(--muted) !important; font-size: 16px !important; }
+#loginImageSeal { border: none !important; border-radius: 0 !important; }
+#waitingContainer { font-size: 18px; color: var(--bronze-l); }
+
+/* ---------------------------------------------------------------- 설정 화면 */
+#settingsContainer { background: rgba(13, 21, 48, 0.94) !important; }
+#settingsNavContainer { box-shadow: 2px 0 0 var(--bronze-d), 4px 0 0 var(--ink); }
+#settingsNavHeaderText { font-size: 24px !important; color: var(--bronze-l) !important; letter-spacing: 0 !important; }
+.settingsNavItem { font-size: 16px !important; color: var(--muted) !important; letter-spacing: 0 !important; }
+.settingsNavItem:hover, .settingsNavItem[selected] { color: var(--bronze-l) !important; text-shadow: 2px 2px 0 var(--ink) !important; }
+.settingsNavDivider { background: var(--bronze-d) !important; height: 2px !important; }
+#settingsNavDone {
+    font-size: 16px !important; color: var(--cream) !important; border-radius: 0 !important;
+    background: var(--navy-2) !important; box-shadow: 0 0 0 2px var(--bronze), 0 0 0 4px var(--ink) !important; border: none !important;
+}
+.settingsTabHeaderText { font-size: 22px !important; color: var(--bronze-l) !important; letter-spacing: 0 !important; }
+.settingsTabHeaderDesc { font-size: 16px !important; color: var(--muted) !important; }
+.settingsFieldTitle, .settingsMemoryTitle, .settingsSelServContainer, .settingsModName, .settingsAuthAccountDetailTitle { font-size: 16px !important; letter-spacing: 0 !important; color: var(--cream) !important; }
+.settingsFieldDesc, .settingsMemoryDesc, .settingsAuthAccountDetailValue, .settingsModVersion { font-size: 16px !important; color: var(--muted) !important; }
+.settingsAuthAccount, .settingsMod, .settingsDropinMod, .settingsSelServContainer {
+    background: var(--navy-2) !important; border-radius: 0 !important;
+    box-shadow: 0 0 0 2px var(--bronze-d), 0 0 0 4px var(--ink) !important; border: none !important;
+}
+.settingsAuthAccountSelect, .settingsAuthAccountLogOut, #settingsSwitchServerButton, .settingsFileSelButton, #settingsUpdateActionButton, .settingsAboutButton {
+    font-size: 16px !important; color: var(--bronze-l) !important; letter-spacing: 0 !important; border-radius: 0 !important;
+}
+.toggleSwitchSlider { border-radius: 0 !important; background-color: var(--navy-d) !important; box-shadow: 0 0 0 2px var(--bronze-d); }
+.toggleSwitchSlider:before { border-radius: 0 !important; background-color: var(--cream) !important; }
+input:checked + .toggleSwitchSlider { background-color: #2e8b3e !important; }
+.rangeSlider { border-radius: 0 !important; background: var(--navy-d) !important; }
+.rangeSliderBar { background: var(--bronze) !important; border-radius: 0 !important; }
+.rangeSliderTrack { border-radius: 0 !important; background: var(--bronze-l) !important; }
+#settingsAboutLogo { border-radius: 0 !important; }
+
+/* 스크롤바 */
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: var(--navy-d); }
+::-webkit-scrollbar-thumb { background: var(--bronze-d); box-shadow: inset 0 0 0 2px var(--bronze); }
+
+/* ---------------------------------------------------------------- 알림 창 (오류 · 서버 선택 · 계정 선택) */
+#overlayContainer { background: rgba(8, 12, 28, 0.7) !important; }
+#overlayContent, #serverSelectContent, #accountSelectContent {
+    background: var(--navy) !important;
+    box-shadow: var(--frame) !important;
+    border-radius: 0 !important;
+}
+#overlayTitle, #serverSelectHeader, #accountSelectHeader { font-size: 22px !important; color: var(--bronze-l) !important; letter-spacing: 0 !important; text-shadow: 2px 2px 0 var(--ink); }
+#overlayDesc { font-size: 16px !important; line-height: 24px !important; color: var(--text) !important; }
+#overlayDesc a { color: var(--bronze-l) !important; }
+#overlayAcknowledge, #serverSelectConfirm, #accountSelectConfirm {
+    font-size: 18px !important; color: var(--cream) !important; border-radius: 0 !important; border: none !important;
+    background: linear-gradient(to bottom, var(--navy-l) 0%, var(--navy-l) 45%, var(--navy-2) 46%, var(--navy) 100%) !important;
+    box-shadow: 0 0 0 2px var(--bronze-l), 0 0 0 4px var(--bronze), 0 0 0 6px var(--ink) !important;
+    letter-spacing: 0 !important; padding: 6px 18px !important;
+}
+#overlayDismiss, #serverSelectCancel, #accountSelectCancel { font-size: 16px !important; color: var(--muted) !important; }
+.serverListing, .accountListing {
+    background: var(--navy-2) !important; border-radius: 0 !important;
+    box-shadow: 0 0 0 2px var(--bronze-d), 0 0 0 4px var(--ink) !important;
+}
+.serverListing[selected], .accountListing[selected] { background: var(--navy-l) !important; box-shadow: 0 0 0 2px var(--bronze-l), 0 0 0 4px var(--ink) !important; }
+.serverListingName, .accountListingName { font-size: 18px !important; color: var(--cream) !important; }
+.serverListingDescription, .serverListingInfo, .serverListingVersion, .serverListingRevision { font-size: 16px !important; color: var(--muted) !important; }
+.serverListingImg { border-radius: 0 !important; image-rendering: pixelated; }
+.serverListingStarWrapper svg { fill: var(--bronze-l) !important; }
+
+/* ---------------------------------------------------------------- 불러오는 화면 */
+#loadingContainer { background: var(--navy-d) !important; }
+#loadCenterImage { width: 150px !important; }
+#loadSpinnerImage { width: 230px !important; image-rendering: pixelated; }
+#newsArticleComments { display: none !important; }
+
+/* 왼쪽 위 서버 이름 (엠블럼 옆) */
+#image_seal_container { position: relative; }
+#image_seal_container::after {
+    content: '힐링타운';
+    position: absolute;
+    left: calc(100% + 14px);
+    top: 50%;
+    transform: translateY(-50%);
+    white-space: nowrap;
+    font-family: 'Pixel', sans-serif;
+    font-size: 32px;
+    color: var(--bronze-l);
+    text-shadow: 2px 2px 0 var(--bronze-d), 4px 4px 0 var(--ink);
+    pointer-events: none;
+}
+
+/* 로그인 버튼: 글자가 커서 밀리지 않게 폭 넓히고 가운데 정렬 */
+.loginOptionButtonContainer { width: 320px !important; }
+.loginOptionButton { width: 100% !important; justify-content: center !important; gap: 10px; padding: 0 16px !important; box-sizing: border-box; }
+.loginOptionButton svg { flex-shrink: 0; }
+
+/* 알림 창: 제목이 테두리 밖으로 나가지 않게 */
+#overlayContent { min-width: 460px; max-width: 620px; padding: 22px 28px !important; box-sizing: border-box; }
+#overlayTitle { white-space: normal; word-break: keep-all; text-align: center; }

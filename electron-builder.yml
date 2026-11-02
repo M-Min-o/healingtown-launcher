@@ -1,0 +1,59 @@
+appId: 'kr.healingtown.launcher'
+productName: '힐링타운 런처'
+artifactName: 'HealingTown-Launcher-setup-${version}.${ext}'
+
+copyright: 'Based on Helios Launcher © Daniel Scalzi (MIT)'
+
+asar: true
+compression: 'maximum'
+
+files:
+  - '!{dist,distro,.gitignore,.vscode,docs,dev-app-update.yml,.nvmrc,eslint.config.mjs}'
+
+extraResources:
+  - 'libraries'
+
+# Windows Configuration
+win: 
+  target: 
+    - target: 'nsis'
+      arch: 'x64'
+
+# Windows Installer Configuration
+nsis:
+  oneClick: false
+  perMachine: false
+  allowElevation: true
+  allowToChangeInstallationDirectory: true
+
+# macOS Configuration
+mac:
+  target:
+    - target: 'dmg'
+      arch:
+        - 'x64'
+        - 'arm64'
+  artifactName: 'HealingTown-Launcher-setup-${version}-${arch}.${ext}'
+  category: 'public.app-category.games'
+
+# Linux Configuration
+linux: 
+  target: 'AppImage'
+  maintainer: 'HealingTown'
+  vendor: 'HealingTown'
+  synopsis: 'Modded Minecraft Launcher'
+  description: 'Custom launcher which allows users to join modded servers. All mods, configurations, and updates are handled automatically.'
+  category: 'Game'
+
+
+# 런처 자동 업데이트: GitHub 저장소의 Releases 에 새 버전을 올리면 런처가 알아서 받음
+#   owner = 내 GitHub 아이디, repo = 런처 저장소 이름 (package.json 의 repository 도 같이 바꾸기)
+publish:
+  provider: github
+  owner: 'M-Min-o'
+  repo: 'healingtown-launcher'
+  releaseType: release
+
+directories:
+  buildResources: 'build'
+  output: 'dist'

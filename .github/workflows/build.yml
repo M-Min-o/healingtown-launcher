@@ -1,0 +1,25 @@
+# 런처 자동 빌드 + 자동 업데이트 배포
+#  package.json 의 version 을 올리고 커밋한 뒤, 같은 버전 태그(예: v1.0.1)를 push 하면
+#  GitHub 가 윈도우 설치 파일을 만들어 Releases 에 올림 → 유저 런처가 알아서 업데이트
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - name: Build & Publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx electron-builder build -w --publish always

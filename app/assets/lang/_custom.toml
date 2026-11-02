@@ -1,0 +1,25 @@
+# 런처 문구 꾸미기 (서버 이름 · 링크 · 환영 문구)
+
+[ejs.app]
+title = "힐링타운 런처"
+
+[ejs.landing]
+mediaGitHubURL = "#"
+mediaXURL = "#"
+mediaInstagramURL = "#"
+mediaYouTubeURL = "#"
+# 디스코드 초대 링크 (없으면 "#")
+mediaDiscordURL = "#"
+
+[ejs.settings]
+sourceGithubLink = "#"
+supportLink = "#"
+
+[ejs.welcome]
+welcomeHeader = "힐링타운에 오신 걸 환영합니다"
+welcomeDescription = "느긋하게 채집하고, 광산을 캐고, 장비를 만들고 강화하며 자라는 마인크래프트 RPG 서버입니다. 필요한 파일은 런처가 알아서 받아 주니, 로그인하고 시작 버튼만 누르면 바로 서버로 들어갈 수 있어요."
+welcomeDescCTA = "몇 번만 클릭하면 바로 시작할 수 있어요."
+
+[js.landing.discord]
+joining = "힐링타운으로 가는 중!"
+joined = "힐링타운 모험 중!"

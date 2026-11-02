@@ -1,0 +1,21 @@
+{
+  "baseUrl": "https://M-Min-o.github.io/healingtown-files/",
+  "server": {
+    "id": "healingtown",
+    "name": "힐링타운",
+    "description": "느긋하게 자라는 마인크래프트 RPG 서버",
+    "icon": "server-icon.png",
+    "version": "1.0.0",
+    "address": "play.example.com:25565",
+    "minecraftVersion": "1.21.4",
+    "autoconnect": true
+  },
+  "fabric": {
+    "enabled": true,
+    "loader": "latest"
+  },
+  "java": {
+    "suggestedMajor": 21,
+    "ram": { "recommended": 4096, "minimum": 2048 }
+  }
+}
