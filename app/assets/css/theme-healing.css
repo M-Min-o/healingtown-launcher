@@ -301,3 +301,14 @@ input:checked + .toggleSwitchSlider { background-color: #2e8b3e !important; }
 /* 알림 창: 제목이 테두리 밖으로 나가지 않게 */
 #overlayContent { min-width: 460px; max-width: 620px; padding: 22px 28px !important; box-sizing: border-box; }
 #overlayTitle { white-space: normal; word-break: keep-all; text-align: center; }
+
+/* 스킨 변경 (설정 → 계정) */
+.settingsAuthAccountSkin, .skinPanel button {
+    background: var(--navy) !important; color: var(--bronze-l) !important; font-size: 16px !important;
+    border: none; box-shadow: 0 0 0 2px var(--bronze-d); padding: 2px 10px; margin-right: 8px; cursor: pointer; font-family: inherit;
+}
+.settingsAuthAccountSkin:hover, .skinPanel button:hover { color: var(--cream) !important; box-shadow: 0 0 0 2px var(--bronze); }
+.skinPanel { margin-top: 10px; padding: 10px; background: var(--navy-d); box-shadow: 0 0 0 2px var(--bronze-d); color: var(--cream); font-size: 16px; }
+.skinRow { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.skinFile { color: var(--muted); }
+.skinStatus { min-height: 18px; font-size: 14px; }

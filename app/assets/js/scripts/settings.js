@@ -656,9 +656,26 @@ function populateAuthAccounts(){
                 <div class="settingsAuthAccountActions">
                     <button class="settingsAuthAccountSelect" ${selectedUUID === acc.uuid ? 'selected>' + Lang.queryJS('settings.authAccountPopulate.selectedAccount') : '>' + Lang.queryJS('settings.authAccountPopulate.selectAccount')}</button>
                     <div class="settingsAuthAccountWrapper">
+                        ${acc.type === 'microsoft' ? '<button class="settingsAuthAccountSkin">스킨 변경</button>' : ''}
                         <button class="settingsAuthAccountLogOut">${Lang.queryJS('settings.authAccountPopulate.logout')}</button>
                     </div>
                 </div>
+                ${acc.type === 'microsoft' ? `<div class="skinPanel" style="display:none">
+                    <div class="skinRow">
+                        <button class="skinPick">PNG 고르기</button>
+                        <span class="skinFile">고른 파일 없음</span>
+                    </div>
+                    <div class="skinRow">
+                        <label><input type="radio" name="skinModel-${acc.uuid}" value="classic" checked> 기본 (굵은 팔)</label>
+                        <label><input type="radio" name="skinModel-${acc.uuid}" value="slim"> 얇은 팔</label>
+                    </div>
+                    <div class="skinRow">
+                        <button class="skinUpload">적용하기</button>
+                        <button class="skinReset">기본 스킨으로</button>
+                    </div>
+                    <div class="skinStatus"></div>
+                    <input type="file" class="skinInput" accept="image/png" style="display:none">
+                </div>` : ''}
             </div>
         </div>`
 
@@ -681,6 +698,90 @@ function prepareAccountsTab() {
     populateAuthAccounts()
     bindAuthAccountSelect()
     bindAuthAccountLogOut()
+    bindSkinChange()
+}
+
+/**
+ * 스킨 변경 (마이크로소프트 계정) - 모장 공식 스킨이 바뀌어서 서버 · 다른 사람에게도 보임
+ *  POST https://api.minecraftservices.com/minecraft/profile/skins (multipart: variant, file)
+ *  DELETE https://api.minecraftservices.com/minecraft/profile/skins/active (기본 스킨)
+ */
+function skinRequest(method, pathName, token, fileBuf, variant) {
+    const https = require('https')
+    return new Promise((resolve, reject) => {
+        let body = null
+        const headers = { Authorization: 'Bearer ' + token }
+        if (fileBuf) {
+            const boundary = '----HealingTownSkin' + Date.now().toString(16)
+            body = Buffer.concat([
+                Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="variant"\r\n\r\n${variant}\r\n`),
+                Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="skin.png"\r\nContent-Type: image/png\r\n\r\n`),
+                fileBuf,
+                Buffer.from(`\r\n--${boundary}--\r\n`)
+            ])
+            headers['Content-Type'] = 'multipart/form-data; boundary=' + boundary
+            headers['Content-Length'] = body.length
+        }
+        const req = https.request({ host: 'api.minecraftservices.com', path: pathName, method, headers }, res => {
+            let data = ''
+            res.on('data', c => data += c)
+            res.on('end', () => (res.statusCode >= 200 && res.statusCode < 300) ? resolve(data) : reject(new Error(res.statusCode + ' ' + data)))
+        })
+        req.on('error', reject)
+        if (body) req.write(body)
+        req.end()
+    })
+}
+
+function skinImageSize(buf) {
+    // PNG 머리 (IHDR) 에서 가로 · 세로 읽기
+    if (buf.length < 24 || buf.readUInt32BE(0) !== 0x89504e47) return null
+    return { w: buf.readUInt32BE(16), h: buf.readUInt32BE(20) }
+}
+
+function bindSkinChange() {
+    Array.from(document.getElementsByClassName('settingsAuthAccountSkin')).forEach(btn => {
+        const accEl = btn.closest('.settingsAuthAccount')
+        const uuid = accEl.getAttribute('uuid')
+        const panel = accEl.querySelector('.skinPanel')
+        const input = panel.querySelector('.skinInput')
+        const status = panel.querySelector('.skinStatus')
+        const fileLabel = panel.querySelector('.skinFile')
+        let fileBuf = null
+        const say = (msg, bad) => { status.textContent = msg; status.style.color = bad ? '#ff7b7b' : '#8ff58f' }
+        btn.onclick = () => { panel.style.display = panel.style.display === 'none' ? 'block' : 'none' }
+        panel.querySelector('.skinPick').onclick = () => input.click()
+        input.onchange = async () => {
+            const f = input.files[0]
+            if (!f) return
+            const buf = Buffer.from(await f.arrayBuffer())
+            const size = skinImageSize(buf)
+            if (!size || size.w !== 64 || (size.h !== 64 && size.h !== 32)) { fileBuf = null; fileLabel.textContent = '고른 파일 없음'; say('64×64 (또는 64×32) PNG 스킨만 쓸 수 있어요.', true); return }
+            fileBuf = buf
+            fileLabel.textContent = f.name
+            say('')
+        }
+        const withToken = async (job) => {
+            if (ConfigManager.getSelectedAccount().uuid !== uuid) { say('먼저 이 계정을 "선택"해 주세요.', true); return }
+            say('적용 중…')
+            try {
+                const ok = await AuthManager.validateSelected()
+                if (!ok) { say('로그인이 만료됐어요. 로그아웃 후 다시 로그인해 주세요.', true); return }
+                await job(ConfigManager.getSelectedAccount().accessToken)
+                say('바뀌었어요! 게임 · 서버에는 다시 접속하면 보여요. (미리보기는 조금 늦게 바뀔 수 있음)')
+                const img = accEl.querySelector('.settingsAuthAccountImage')
+                if (img) img.src = `https://mc-heads.net/body/${uuid}/60?t=${Date.now()}`
+            } catch (err) {
+                say('실패했어요: ' + (String(err.message).includes('429') ? '너무 자주 바꿨어요. 잠시 후 다시 해 주세요.' : err.message), true)
+            }
+        }
+        panel.querySelector('.skinUpload').onclick = () => {
+            if (!fileBuf) { say('스킨 PNG 파일을 먼저 골라 주세요.', true); return }
+            const variant = panel.querySelector(`input[name="skinModel-${uuid}"]:checked`).value
+            withToken(token => skinRequest('POST', '/minecraft/profile/skins', token, fileBuf, variant))
+        }
+        panel.querySelector('.skinReset').onclick = () => withToken(token => skinRequest('DELETE', '/minecraft/profile/skins/active', token))
+    })
 }
 
 /**
