@@ -292,6 +292,16 @@ input:checked + .toggleSwitchSlider { background-color: #2e8b3e !important; }
     text-shadow: 2px 2px 0 var(--bronze-d), 4px 4px 0 var(--ink);
     pointer-events: none;
 }
+/* 업데이트 있을 때: 원래 Helios 효과가 '힐링타운' 글자를 지워버려서, 글자는 그대로 두고 엠블럼만 초록색으로 빛나게 */
+#image_seal_container[update]::after {
+    content: '힐링타운' !important;
+    height: auto !important; width: auto !important;
+    top: 50% !important; left: calc(100% + 14px) !important;
+    border-radius: 0 !important; box-shadow: none !important;
+    background: none !important; animation: none !important;
+    pointer-events: none;
+}
+#image_seal_container[update] #image_seal { filter: drop-shadow(0 0 8px #6fe05a); }
 
 /* 로그인 버튼: 글자가 커서 밀리지 않게 폭 넓히고 가운데 정렬 */
 .loginOptionButtonContainer { width: 320px !important; }

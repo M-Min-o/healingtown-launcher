@@ -62,6 +62,7 @@ if(!isDev){
                     }
                 })
                 showUpdateUI(info)
+                showUpdatePopup(info)
                 break
             case 'update-not-available':
                 loggerAutoUpdater.info('No new update found.')
@@ -102,6 +103,36 @@ if(!isDev){
  */
 function changeAllowPrerelease(val){
     ipcRenderer.send('autoUpdateAction', 'allowPrereleaseChange', val)
+}
+
+/**
+ * 새 버전을 다 받으면 바로 물어보는 창 (다른 창이 떠 있으면 닫힐 때까지 기다렸다가 띄움)
+ */
+let updatePopupShown = false
+function showUpdatePopup(info){
+    if(updatePopupShown) return
+    const tryShow = () => {
+        if(typeof isOverlayVisible === 'function' && isOverlayVisible()){
+            setTimeout(tryShow, 3000)
+            return
+        }
+        updatePopupShown = true
+        setOverlayContent(
+            '새 버전이 준비됐어요!',
+            `힐링타운 런처 <b>${info.version}</b> 버전을 받았어요.<br>지금 설치하면 런처가 잠깐 꺼졌다가 다시 켜집니다.<br><br>나중에 설치하려면 왼쪽 위 엠블럼을 누르거나, 런처를 끌 때 자동으로 설치됩니다.`,
+            '지금 설치',
+            '나중에'
+        )
+        setOverlayHandler(() => {
+            toggleOverlay(false)
+            ipcRenderer.send('autoUpdateAction', 'installUpdateNow')
+        })
+        setDismissHandler(() => {
+            toggleOverlay(false)
+        })
+        toggleOverlay(true, true)
+    }
+    tryShow()
 }
 
 function showUpdateUI(info){

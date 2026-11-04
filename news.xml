@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"
+     xmlns:content="http://purl.org/rss/1.0/modules/content/"
+     xmlns:dc="http://purl.org/dc/elements/1.1/"
+     xmlns:slash="http://purl.org/rss/1.0/modules/slash/">
+  <channel>
+    <title>힐링타운 공지사항</title>
+    <link>https://M-Min-o.github.io/healingtown-files/</link>
+    <description>힐링타운 서버 공지</description>
+
+    <!-- 새 공지는 맨 위에 <item> 하나를 복사해서 추가 (위에 있는 게 먼저 보임) -->
+    <item>
+      <title>힐링타운 오픈 안내</title>
+      <link>https://M-Min-o.github.io/healingtown-files/</link>
+      <pubDate>Wed, 04 Nov 2026 19:00:00 +0900</pubDate>
+      <dc:creator>운영자</dc:creator>
+      <content:encoded><![CDATA[
+        <p>힐링타운에 오신 것을 환영합니다!</p>
+        <p>Shift + F 로 서버 메뉴를 열 수 있어요.</p>
+      ]]></content:encoded>
+    </item>
+
+  </channel>
+</rss>
