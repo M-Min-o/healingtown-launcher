@@ -6,7 +6,7 @@
     "description": "느긋하게 자라는 마인크래프트 RPG 서버",
     "icon": "server-icon.png",
     "version": "1.0.0",
-    "address": "play.example.com:25565",
+    "address": "min346.kro.kr:25565",
     "minecraftVersion": "1.21.4",
     "autoconnect": true
   },
