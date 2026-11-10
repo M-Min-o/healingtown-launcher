@@ -605,8 +605,14 @@ async function dlAsync(login = true) {
         }
 
         try {
+            // 멀미 줄이기 (설정 → 모드 → 편의 기능)
+            applyComfortOptions(pb.gameDir)
+
             // Build Minecraft process.
             proc = pb.build()
+
+            // 게임 하는 동안 런처 배경 음악 멈춤 (게임이 꺼지면 다시)
+            if(typeof HTBgm !== 'undefined') HTBgm.gameStarted(proc)
 
             // Bind listeners to stdout.
             proc.stdout.on('data', tempListener)
@@ -634,6 +640,44 @@ async function dlAsync(login = true) {
         }
     }
 
+}
+
+/**
+ * 멀미 줄이기: 게임 폴더 options.txt 에 값 넣기
+ *  켜짐 → 걸을 때 화면 흔들림 끔 · 시야(FOV) 효과 0 · 화면 왜곡 효과 0 · 맞을 때 화면 기울기 0
+ *  꺼짐 → 지난번에 넣었던 경우에만 마인크래프트 기본값으로 한 번 되돌림
+ *  options.txt 가 없으면 (처음 실행) 한국어로 시작
+ */
+function applyComfortOptions(gameDir){
+    try {
+        const fs = require('fs')
+        const path = require('path')
+        const on = ConfigManager.getReduceMotion()
+        const applied = ConfigManager.getReduceMotionApplied()
+        const file = path.join(gameDir, 'options.txt')
+        const exists = fs.existsSync(file)
+        if(!on && !applied && exists) return
+        const want = {}
+        if(on) Object.assign(want, { bobView: 'false', fovEffectScale: '0.0', screenEffectScale: '0.0', damageTiltStrength: '0.0' })
+        else if(applied) Object.assign(want, { bobView: 'true', fovEffectScale: '1.0', screenEffectScale: '1.0', damageTiltStrength: '1.0' })
+        if(!exists) want.lang = 'ko_kr'
+        let lines = exists ? fs.readFileSync(file, 'utf-8').split(/\r?\n/).filter(l => l.length > 0) : []
+        const seen = new Set()
+        lines = lines.map(l => {
+            const i = l.indexOf(':')
+            if(i < 0) return l
+            const k = l.substring(0, i)
+            if(Object.prototype.hasOwnProperty.call(want, k)){ seen.add(k); return k + ':' + want[k] }
+            return l
+        })
+        for(const k of Object.keys(want)) if(!seen.has(k)) lines.push(k + ':' + want[k])
+        fs.mkdirSync(gameDir, { recursive: true })
+        fs.writeFileSync(file, lines.join('\n') + '\n', 'utf-8')
+        ConfigManager.setReduceMotionApplied(on)
+        ConfigManager.save()
+    } catch(err) {
+        loggerLaunchSuite.warn('멀미 줄이기 설정을 넣지 못했습니다.', err)
+    }
 }
 
 /**

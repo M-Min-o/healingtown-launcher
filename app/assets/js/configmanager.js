@@ -82,11 +82,15 @@ const DEFAULT_CONFIG = {
             resHeight: 720,
             fullscreen: false,
             autoConnect: true,
-            launchDetached: true
+            launchDetached: true,
+            reduceMotion: true,           // 멀미 줄이기 (화면 흔들림 · FOV 효과 · 화면 왜곡 · 피격 기울기 끄기)
+            reduceMotionApplied: false
         },
         launcher: {
             allowPrerelease: false,
-            dataDirectory: dataPath
+            dataDirectory: dataPath,
+            bgmVolume: 35,                // 배경 음악 크기 (0~100)
+            bgmMuted: false
         }
     },
     newsCache: {
@@ -779,6 +783,36 @@ exports.setLaunchDetached = function(launchDetached){
  * @param {boolean} def Optional. If true, the default value will be returned.
  * @returns {boolean} Whether or not the launcher should download prerelease versions.
  */
+/** 멀미 줄이기 (게임 실행 때 options.txt 에 흔들림 · FOV 효과 · 화면 왜곡 · 피격 기울기 0 을 넣음) */
+exports.getReduceMotion = function(def = false){
+    return !def ? config.settings.game.reduceMotion !== false : DEFAULT_CONFIG.settings.game.reduceMotion
+}
+exports.setReduceMotion = function(v){
+    config.settings.game.reduceMotion = !!v
+}
+/** 지난번에 멀미 줄이기 값을 넣었는지 (끄면 한 번 원래 값으로 되돌림) */
+exports.getReduceMotionApplied = function(){
+    return !!config.settings.game.reduceMotionApplied
+}
+exports.setReduceMotionApplied = function(v){
+    config.settings.game.reduceMotionApplied = !!v
+}
+
+/** 배경 음악 크기 (0~100) · 음소거 */
+exports.getBgmVolume = function(def = false){
+    const v = !def ? config.settings.launcher.bgmVolume : DEFAULT_CONFIG.settings.launcher.bgmVolume
+    return typeof v === 'number' ? Math.max(0, Math.min(100, v)) : 35
+}
+exports.setBgmVolume = function(v){
+    config.settings.launcher.bgmVolume = Math.max(0, Math.min(100, Math.round(Number(v) || 0)))
+}
+exports.getBgmMuted = function(){
+    return !!config.settings.launcher.bgmMuted
+}
+exports.setBgmMuted = function(v){
+    config.settings.launcher.bgmMuted = !!v
+}
+
 exports.getAllowPrerelease = function(def = false){
     return !def ? config.settings.launcher.allowPrerelease : DEFAULT_CONFIG.settings.launcher.allowPrerelease
 }

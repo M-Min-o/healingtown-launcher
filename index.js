@@ -235,7 +235,8 @@ function createWindow() {
         webPreferences: {
             preload: path.join(__dirname, 'app', 'assets', 'js', 'preloader.js'),
             nodeIntegration: true,
-            contextIsolation: false
+            contextIsolation: false,
+            autoplayPolicy: 'no-user-gesture-required'     // 배경 음악 자동 재생
         },
         backgroundColor: '#171614'
     })

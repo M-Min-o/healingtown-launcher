@@ -133,6 +133,21 @@
                 </div>
             </div>
             <div id="settingsModsContainer">
+                <div id="settingsComfortContainer">
+                    <div class="settingsModsHeader">편의 기능</div>
+                    <div class="settingsFieldContainer">
+                        <div class="settingsFieldLeft">
+                            <span class="settingsFieldTitle">멀미 줄이기</span>
+                            <span class="settingsFieldDesc">걸을 때 화면 흔들림 · 시야(FOV)가 늘었다 줄었다 하는 효과 · 화면 일그러짐 · 맞을 때 화면 기울기를 끕니다. 3D 멀미 · 시점 멀미가 있으면 켜 두세요. (다음 게임 실행부터 적용)</span>
+                        </div>
+                        <div class="settingsFieldRight">
+                            <label class="toggleSwitch">
+                                <input type="checkbox" cValue="ReduceMotion">
+                                <span class="toggleSwitchSlider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
                 <div id="settingsReqModsContainer">
                     <div class="settingsModsHeader"><%- lang('settings.requiredMods') %></div>
                     <div id="settingsReqModsContent">
@@ -273,6 +288,20 @@
             <div class="settingsTabHeader">
                 <span class="settingsTabHeaderText"><%- lang('settings.launcherTabHeaderText') %></span>
                 <span class="settingsTabHeaderDesc"><%- lang('settings.launcherTabHeaderDesc') %></span>
+            </div>
+            <div class="settingsFieldContainer">
+                <div class="settingsFieldLeft">
+                    <span class="settingsFieldTitle">배경 음악</span>
+                    <span class="settingsFieldDesc">런처에서 나오는 잔잔한 음악 크기 (게임을 하는 동안은 자동으로 멈춤)</span>
+                </div>
+                <div class="settingsFieldRight htBgmSettings">
+                    <input type="range" id="settingsBgmVolume" min="0" max="100" step="1">
+                    <span id="settingsBgmVolumeText">35%</span>
+                    <label class="toggleSwitch" title="음악 켜기 · 끄기">
+                        <input type="checkbox" id="settingsBgmOn">
+                        <span class="toggleSwitchSlider"></span>
+                    </label>
+                </div>
             </div>
             <div class="settingsFieldContainer">
                 <div class="settingsFieldLeft">

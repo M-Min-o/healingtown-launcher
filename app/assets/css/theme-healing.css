@@ -322,3 +322,37 @@ input:checked + .toggleSwitchSlider { background-color: #2e8b3e !important; }
 .skinRow { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
 .skinFile { color: var(--muted); }
 .skinStatus { min-height: 18px; font-size: 14px; }
+
+/* ---------------------------------------------------------------- 배경 음악 (bgm.js) */
+#htBgm {
+    position: fixed; top: 34px; left: 14px; z-index: 50;
+    display: flex; align-items: center; gap: 8px;
+}
+#htBgmBtn {
+    width: 30px; height: 30px; padding: 0; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--bronze-l); background: var(--navy); border: none; border-radius: 0;
+    box-shadow: var(--frame);
+}
+#htBgmBtn:hover { background: var(--navy-2); color: var(--cream); }
+#htBgmBtn.off { color: var(--muted); }
+#htBgmPanel {
+    display: flex; align-items: center; gap: 8px; padding: 4px 10px; height: 22px;
+    background: rgba(13, 21, 48, 0.88); box-shadow: var(--frame);
+    opacity: 0; pointer-events: none; transform: translateX(-6px); transition: opacity .15s, transform .15s;
+}
+#htBgm:hover #htBgmPanel, #htBgmPanel:focus-within { opacity: 1; pointer-events: auto; transform: none; }
+#htBgmText { min-width: 34px; font-size: 13px; color: var(--cream); }
+#htBgmRange, #settingsBgmVolume {
+    -webkit-appearance: none; appearance: none; width: 110px; height: 6px; margin: 0;
+    background: var(--navy-d); box-shadow: 0 0 0 2px var(--bronze-d); cursor: pointer;
+}
+#settingsBgmVolume { width: 160px; }
+#htBgmRange::-webkit-slider-thumb, #settingsBgmVolume::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 10px; height: 16px; background: var(--bronze-l);
+    box-shadow: 0 0 0 2px var(--ink); border-radius: 0;
+}
+.htBgmSettings { display: flex; align-items: center; gap: 12px; }
+#settingsBgmVolumeText { min-width: 38px; color: var(--cream); font-size: 13px; }
+#settingsComfortContainer { margin-bottom: 18px; }
+#settingsComfortContainer .settingsFieldContainer { width: auto; padding: 6px 0; }
