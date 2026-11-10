@@ -89,7 +89,7 @@ const DEFAULT_CONFIG = {
         launcher: {
             allowPrerelease: false,
             dataDirectory: dataPath,
-            bgmVolume: 35,                // 배경 음악 크기 (0~100)
+            bgmVolume: 25,                // 배경 음악 크기 (0~100)
             bgmMuted: false
         }
     },

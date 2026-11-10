@@ -7,7 +7,10 @@
  */
 /* global ConfigManager */
 const HTBgm = (() => {
-    const MAX_GAIN = 0.6                     // 100% 일 때 실제 크기 (곡 자체가 꽤 커서 조금 줄여 둠)
+    const MAX_GAIN = 0.5                     // 100% 일 때 실제 크기 (곡 자체가 커서 줄여 둠)
+    // 귀에 들리는 크기는 막대 값과 비례하지 않음 → 제곱으로 (막대를 낮추면 소리가 그만큼 확 작아지게, 작은 쪽을 세밀하게)
+    //  15% ≈ 예전 2%, 25%(처음 값) ≈ 예전 5%, 50% ≈ 예전 21%, 100% ≈ 예전 83%
+    const DEFAULT_PERCENT = 25
     // 런처는 ejs-electron 이 file: 주소를 통째로 가로채서 주는데, 이렇게 받은 소리 파일은 크롬이 못 틀어줌
     // (MEDIA_ELEMENT_ERROR: Format error) → 파일을 직접 읽어서 blob 주소로 넘김 (반복 재생 · 되감기도 됨)
     function source(){
@@ -30,9 +33,9 @@ const HTBgm = (() => {
     let started = false
 
     const cm = () => (typeof ConfigManager !== 'undefined' ? ConfigManager : null)
-    const percent = () => { try { return cm() ? cm().getBgmVolume() : 35 } catch(e) { return 35 } }
+    const percent = () => { try { return cm() ? cm().getBgmVolume() : DEFAULT_PERCENT } catch(e) { return DEFAULT_PERCENT } }
     const muted = () => { try { return cm() ? cm().getBgmMuted() : false } catch(e) { return false } }
-    const target = () => (muted() || inGame || percent() <= 0) ? 0 : (percent() / 100) * MAX_GAIN
+    const target = () => (muted() || inGame || percent() <= 0) ? 0 : Math.pow(percent() / 100, 2) * MAX_GAIN
 
     function fadeTo(v, ms, done){
         if(fadeTimer) clearInterval(fadeTimer)
@@ -78,7 +81,7 @@ const HTBgm = (() => {
     function setOn(on){
         if(!cm()) return
         cm().setBgmMuted(!on)
-        if(on && percent() <= 0) cm().setBgmVolume(35)
+        if(on && percent() <= 0) cm().setBgmVolume(DEFAULT_PERCENT)
         save()
         sync(400)
     }
