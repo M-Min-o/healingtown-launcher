@@ -2,7 +2,7 @@ const remoteMain = require('@electron/remote/main')
 remoteMain.initialize()
 
 // Requirements
-const { app, BrowserWindow, ipcMain, Menu, shell } = require('electron')
+const { app, BrowserWindow, ipcMain, Menu, shell, Tray, nativeImage } = require('electron')
 const autoUpdater                       = require('electron-updater').autoUpdater
 const ejse                              = require('ejs-electron')
 const fs                                = require('fs')
@@ -90,6 +90,40 @@ ipcMain.on('autoUpdateAction', (event, arg, data) => {
             break
     }
 })
+// 게임 중 런처 숨기기: 게임 창이 뜨면 런처 창은 숨기고 작업 표시줄 오른쪽(트레이)에 아이콘만 → 누르면 다시 열림
+//  게임이 꺼지면 다시 나타남 (트레이 아이콘을 못 만들면 숨기지 않고 최소화만 - 다시 열 방법이 없어지지 않게)
+let tray = null
+function showLauncher(){
+    if(tray){ tray.destroy(); tray = null }
+    if(win){
+        if(win.isMinimized()) win.restore()
+        win.show()
+        win.focus()
+    }
+}
+ipcMain.on('htGameWindow', (event, what) => {
+    if(!win) return
+    if(what === 'hide'){
+        if(!tray){
+            try {
+                let icon = nativeImage.createFromPath(getPlatformIcon('SealCircle'))
+                if(process.platform !== 'win32' && !icon.isEmpty()) icon = icon.resize({ width: 16, height: 16 })
+                tray = new Tray(icon)
+                tray.setToolTip('힐링타운 런처 (게임 중) - 누르면 런처가 열려요')
+                tray.setContextMenu(Menu.buildFromTemplate([{ label: '런처 열기', click: showLauncher }]))
+                tray.on('click', showLauncher)
+                tray.on('double-click', showLauncher)
+            } catch(e) {
+                console.error('트레이 아이콘을 만들지 못했습니다.', e)
+                tray = null
+            }
+        }
+        if(tray) win.hide(); else win.minimize()
+    } else if(what === 'show'){
+        showLauncher()
+    }
+})
+
 // Redirect distribution index event from preloader to renderer.
 ipcMain.on('distributionIndexDone', (event, res) => {
     event.sender.send('distributionIndexDone', res)

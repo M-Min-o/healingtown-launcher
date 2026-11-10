@@ -296,9 +296,21 @@
                 </div>
                 <div class="settingsFieldRight htBgmSettings">
                     <input type="range" id="settingsBgmVolume" min="0" max="100" step="1">
-                    <span id="settingsBgmVolumeText">35%</span>
+                    <span id="settingsBgmVolumeText">25%</span>
                     <label class="toggleSwitch" title="음악 켜기 · 끄기">
                         <input type="checkbox" id="settingsBgmOn">
+                        <span class="toggleSwitchSlider"></span>
+                    </label>
+                </div>
+            </div>
+            <div class="settingsFieldContainer">
+                <div class="settingsFieldLeft">
+                    <span class="settingsFieldTitle">게임 중에는 런처 숨기기</span>
+                    <span class="settingsFieldDesc">마인크래프트 창이 뜨면 런처 창을 숨기고, 게임을 끄면 다시 나타납니다. 게임 중에 런처를 열려면 작업 표시줄 오른쪽(시계 옆)의 힐링타운 아이콘을 누르세요.</span>
+                </div>
+                <div class="settingsFieldRight">
+                    <label class="toggleSwitch">
+                        <input type="checkbox" cValue="HideOnGame">
                         <span class="toggleSwitchSlider"></span>
                     </label>
                 </div>

@@ -614,6 +614,9 @@ async function dlAsync(login = true) {
             // 게임 하는 동안 런처 배경 음악 멈춤 (게임이 꺼지면 다시)
             if(typeof HTBgm !== 'undefined') HTBgm.gameStarted(proc)
 
+            // 게임 창이 뜨면 런처는 숨김 (설정 → 런처 → 게임 중에는 런처 숨기기)
+            if(ConfigManager.getHideOnGame()) hideLauncherWhileGame(proc)
+
             // Bind listeners to stdout.
             proc.stdout.on('data', tempListener)
             proc.stderr.on('data', gameErrorListener)
@@ -640,6 +643,34 @@ async function dlAsync(login = true) {
         }
     }
 
+}
+
+/**
+ * 게임 중 런처 숨기기
+ *  - 마인크래프트 시작 화면이 뜨면 ("Sound engine started" 줄) 조금 뒤 런처 창을 숨김 → 작업 표시줄 오른쪽 트레이 아이콘
+ *  - 그 줄이 안 나와도 (소리 장치가 없는 경우 등) 1분 반 뒤에는 숨김
+ *  - 게임이 꺼지면 (튕겨도) 런처가 다시 나타남
+ */
+function hideLauncherWhileGame(proc){
+    let hidden = false, closed = false, fallback = null
+    const watch = function(data){
+        if(GAME_JOINED_REGEX.test(data)) setTimeout(hide, 1500)
+    }
+    function hide(){
+        if(hidden || closed) return
+        hidden = true
+        clearTimeout(fallback)
+        proc.stdout.removeListener('data', watch)
+        ipcRenderer.send('htGameWindow', 'hide')
+    }
+    proc.stdout.on('data', watch)
+    fallback = setTimeout(hide, 90000)
+    proc.on('close', () => {
+        closed = true                                              // 숨기기 전에 꺼졌으면 늦게 오는 숨기기도 막음
+        clearTimeout(fallback)
+        proc.stdout.removeListener('data', watch)
+        if(hidden) ipcRenderer.send('htGameWindow', 'show')
+    })
 }
 
 /**

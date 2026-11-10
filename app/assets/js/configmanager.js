@@ -90,7 +90,8 @@ const DEFAULT_CONFIG = {
             allowPrerelease: false,
             dataDirectory: dataPath,
             bgmVolume: 25,                // 배경 음악 크기 (0~100)
-            bgmMuted: false
+            bgmMuted: false,
+            hideOnGame: true              // 게임 창이 뜨면 런처 숨기기 (트레이 아이콘), 게임을 끄면 다시
         }
     },
     newsCache: {
@@ -811,6 +812,14 @@ exports.getBgmMuted = function(){
 }
 exports.setBgmMuted = function(v){
     config.settings.launcher.bgmMuted = !!v
+}
+
+/** 게임 중에는 런처 숨기기 (게임 창이 뜨면 숨기고 트레이 아이콘만, 게임을 끄면 다시 나타남) */
+exports.getHideOnGame = function(def = false){
+    return !def ? config.settings.launcher.hideOnGame !== false : DEFAULT_CONFIG.settings.launcher.hideOnGame
+}
+exports.setHideOnGame = function(v){
+    config.settings.launcher.hideOnGame = !!v
 }
 
 exports.getAllowPrerelease = function(def = false){
