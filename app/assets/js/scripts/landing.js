@@ -788,7 +788,7 @@ document.getElementById('newsButton').onclick = () => {
         $('#landingContainer *').attr('tabindex', '-1')
         $('#newsContainer, #newsContainer *, #lower, #lower #center *').removeAttr('tabindex')
         if(newsAlertShown){
-            $('#newsButtonAlert').fadeOut(2000)
+            $('#newsButtonAlert').fadeOut(300)
             newsAlertShown = false
             ConfigManager.setNewsCacheDismissed(true)
             ConfigManager.save()
@@ -925,7 +925,8 @@ async function initNews(){
         const lN = newsArr[0]
         const cached = ConfigManager.getNewsCache()
         let newHash = await digestMessage(lN.content)
-        let newDate = new Date(lN.date)
+        // 새 공지인지: 원래 시각(pubTime)으로 비교 (예전에는 한국어 날짜 글자를 다시 읽다가 실패해서, 한 번 열어 봐도 다음에 또 빨간 점이 떴음)
+        let newDate = new Date(Number.isFinite(lN.pubTime) ? lN.pubTime : 0)
         let isNew = false
 
         if(cached.date != null && cached.content != null){
@@ -1053,7 +1054,8 @@ async function loadNews(){
                 // JQuery Element
                     const el = $(items[i])
 
-                    // Resolve date.
+                    // Resolve date. (pubTime = 비교용 원래 시각, date = 화면에 보이는 한국어 날짜)
+                    const pubTime = new Date(el.find('pubDate').text()).getTime()
                     const date = new Date(el.find('pubDate').text()).toLocaleDateString('ko-KR', {month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric'})
 
                     // Resolve comments.
@@ -1078,6 +1080,7 @@ async function loadNews(){
                             link,
                             title,
                             date,
+                            pubTime,
                             author,
                             content,
                             comments,
