@@ -42,6 +42,9 @@ function initAutoUpdater(event, data) {
     autoUpdater.on('update-downloaded', (info) => {
         event.sender.send('autoUpdateNotification', 'update-downloaded', info)
     })
+    autoUpdater.on('download-progress', (p) => {          // 새 버전 받는 중 (몇 %)
+        event.sender.send('autoUpdateNotification', 'download-progress', { percent: p.percent })
+    })
     autoUpdater.on('update-not-available', (info) => {
         event.sender.send('autoUpdateNotification', 'update-not-available', info)
     })

@@ -50,9 +50,14 @@ if(!isDev){
                 if(process.platform === 'darwin'){
                     info.darwindownload = `https://github.com/M-Min-o/healingtown-launcher/releases/download/v${info.version}/HealingTown-Launcher-setup-${info.version}${process.arch === 'arm64' ? '-arm64' : '-x64'}.dmg`
                     showUpdateUI(info)
+                } else {
+                    showUpdatePopup(info, 'available')         // 켜자마자 바로 알림 (받는 중 몇 % 표시)
                 }
-                
+
                 populateSettingsUpdateInformation(info)
+                break
+            case 'download-progress':
+                updatePopupProgress(info)
                 break
             case 'update-downloaded':
                 loggerAutoUpdater.info('Update ' + info.version + ' ready to be installed.')
@@ -62,7 +67,7 @@ if(!isDev){
                     }
                 })
                 showUpdateUI(info)
-                showUpdatePopup(info)
+                showUpdatePopup(info, 'downloaded')
                 break
             case 'update-not-available':
                 loggerAutoUpdater.info('No new update found.')
@@ -106,33 +111,83 @@ function changeAllowPrerelease(val){
 }
 
 /**
- * 새 버전을 다 받으면 바로 물어보는 창 (다른 창이 떠 있으면 닫힐 때까지 기다렸다가 띄움)
+ * 새 버전 알림 창
+ *  1) 새 버전을 찾자마자 (available): "받는 중 N%" + [다 받으면 설치] [나중에]
+ *  2) 다 받으면 (downloaded): 창이 떠 있으면 [지금 설치] 로 바뀜 · [다 받으면 설치] 를 눌러 뒀으면 바로 설치
+ *  - '나중에' 를 누르면 다시 안 물어봄 (왼쪽 위 엠블럼 · 설정 → 업데이트에서 설치, 런처를 끌 때 자동 설치)
+ *  - 다른 창(로그인 등)이 떠 있으면 닫힐 때까지 기다렸다가 띄움
  */
-let updatePopupShown = false
-function showUpdatePopup(info){
-    if(updatePopupShown) return
-    const tryShow = () => {
-        if(typeof isOverlayVisible === 'function' && isOverlayVisible()){
-            setTimeout(tryShow, 3000)
-            return
-        }
-        updatePopupShown = true
+const updatePopup = { open: false, dismissed: false, installWhenReady: false, downloaded: false, waiting: false, info: null, percent: 0 }
+
+function updatePopupInstall(){
+    toggleOverlay(false)
+    updatePopup.open = false
+    ipcRenderer.send('autoUpdateAction', 'installUpdateNow')
+}
+
+function renderUpdatePopup(){
+    const u = updatePopup, v = u.info ? u.info.version : ''
+    if(u.downloaded){
         setOverlayContent(
             '새 버전이 준비됐어요!',
-            `힐링타운 런처 <b>${info.version}</b> 버전을 받았어요.<br>지금 설치하면 런처가 잠깐 꺼졌다가 다시 켜집니다.<br><br>나중에 설치하려면 왼쪽 위 엠블럼을 누르거나, 런처를 끌 때 자동으로 설치됩니다.`,
+            `힐링타운 런처 <b>${v}</b> 버전을 다 받았어요.<br>지금 설치하면 런처가 잠깐 꺼졌다가 다시 켜집니다.<br><br>나중에 설치하려면 왼쪽 위 엠블럼을 누르거나, 런처를 끌 때 자동으로 설치됩니다.`,
             '지금 설치',
             '나중에'
         )
+        setOverlayHandler(updatePopupInstall)
+    } else {
+        setOverlayContent(
+            '새 버전이 나왔어요!',
+            `힐링타운 런처 <b>${v}</b> 버전을 받고 있어요. <b id="htUpdatePercent">${Math.floor(u.percent)}%</b>`
+                + (u.installWhenReady ? '<br><br>다 받으면 바로 설치하고 다시 켜집니다.' : '<br><br>다 받으면 바로 설치할 수 있어요. (받는 동안 런처는 그대로 쓸 수 있어요)'),
+            u.installWhenReady ? '받는 중...' : '다 받으면 설치',
+            '나중에'
+        )
         setOverlayHandler(() => {
-            toggleOverlay(false)
-            ipcRenderer.send('autoUpdateAction', 'installUpdateNow')
+            if(u.installWhenReady) return
+            u.installWhenReady = true
+            renderUpdatePopup()
         })
-        setDismissHandler(() => {
-            toggleOverlay(false)
-        })
+    }
+    setDismissHandler(() => {
+        toggleOverlay(false)
+        u.open = false
+        u.dismissed = true
+        u.installWhenReady = false
+    })
+}
+
+function showUpdatePopup(info, stage){
+    const u = updatePopup
+    u.info = info
+    // 우리 창이 떠 있다가 다른 창(오류 안내 등)으로 바뀌었으면 '닫힌 것' 으로 봄
+    if(u.open && !(isOverlayVisible() && document.getElementById('htUpdatePercent'))) u.open = false
+    if(stage === 'downloaded'){
+        u.downloaded = true
+        if(u.installWhenReady){ updatePopupInstall(); return }
+        if(u.open){ renderUpdatePopup(); return }
+    }
+    if(u.dismissed || u.open || u.waiting) return
+    const tryShow = () => {
+        if(typeof isOverlayVisible === 'function' && isOverlayVisible()){
+            u.waiting = true
+            setTimeout(tryShow, 3000)
+            return
+        }
+        u.waiting = false
+        if(u.dismissed || u.open) return
+        u.open = true
+        renderUpdatePopup()
         toggleOverlay(true, true)
     }
     tryShow()
+}
+
+function updatePopupProgress(p){
+    if(p == null || typeof p.percent !== 'number') return
+    updatePopup.percent = p.percent
+    const el = document.getElementById('htUpdatePercent')
+    if(el) el.textContent = Math.floor(p.percent) + '%'
 }
 
 function showUpdateUI(info){
