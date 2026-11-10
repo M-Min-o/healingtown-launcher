@@ -647,27 +647,38 @@ async function dlAsync(login = true) {
 
 /**
  * 게임 중 런처 숨기기
- *  - 마인크래프트 시작 화면이 뜨면 ("Sound engine started" 줄) 조금 뒤 런처 창을 숨김 → 작업 표시줄 오른쪽 트레이 아이콘
- *  - 그 줄이 안 나와도 (소리 장치가 없는 경우 등) 1분 반 뒤에는 숨김
+ *  - 마인크래프트 창이 만들어지는 순간 ("Backend library: LWJGL" 줄) 바로 런처 창을 숨김 → 작업 표시줄 오른쪽 트레이 아이콘
+ *    (예전에는 시작 화면까지 다 불러온 뒤 "Sound engine started" 를 기다려서 오래 걸렸음)
+ *  - 그 줄을 못 보면: 마크를 불러오기 시작하고 10초 뒤, 그것도 못 보면 실행 30초 뒤에 숨김
  *  - 게임이 꺼지면 (튕겨도) 런처가 다시 나타남
  */
+const GAME_WINDOW_REGEX = /Backend library: LWJGL|Sound engine started/
+const GAME_LOADING_REGEX = /Loading Minecraft .+ with Fabric Loader|ModLauncher .+ starting|MinecraftForge .+ Initialized/
 function hideLauncherWhileGame(proc){
-    let hidden = false, closed = false, fallback = null
+    let hidden = false, closed = false, timer = null, timerAt = Infinity
+    const later = (ms) => {                                        // 더 빨리 숨길 때만 시간을 당김
+        const at = Date.now() + ms
+        if(at >= timerAt) return
+        clearTimeout(timer)
+        timerAt = at
+        timer = setTimeout(hide, ms)
+    }
     const watch = function(data){
-        if(GAME_JOINED_REGEX.test(data)) setTimeout(hide, 1500)
+        if(GAME_WINDOW_REGEX.test(data)) later(300)
+        else if(GAME_LOADING_REGEX.test(data)) later(10000)
     }
     function hide(){
         if(hidden || closed) return
         hidden = true
-        clearTimeout(fallback)
+        clearTimeout(timer)
         proc.stdout.removeListener('data', watch)
         ipcRenderer.send('htGameWindow', 'hide')
     }
     proc.stdout.on('data', watch)
-    fallback = setTimeout(hide, 90000)
+    later(30000)
     proc.on('close', () => {
         closed = true                                              // 숨기기 전에 꺼졌으면 늦게 오는 숨기기도 막음
-        clearTimeout(fallback)
+        clearTimeout(timer)
         proc.stdout.removeListener('data', watch)
         if(hidden) ipcRenderer.send('htGameWindow', 'show')
     })
