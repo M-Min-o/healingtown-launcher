@@ -4,6 +4,7 @@
  *  - 둘이 왔다갔다 돌아다니고, 가끔 낮잠, 밤이 되면 집 침대에서 잠
  *  - 시간이 흐름: 런처를 켠 시각(실제 시각)에서 시작해서 하루 = DAY_MINUTES 분
  *  - 밀은 시간이 지나며 자라고 다 익으면 다시 심어짐
+ *  - 마우스로 집어 들 수 있음: 들고 있는 동안 바둥바둥, 놓으면 고양이는 툭 떨어지고 해파리는 둥실 내려옴
  */
 (function () {
     'use strict'
@@ -250,10 +251,21 @@
     //  해파리: jelly_1/2/3(둥실) · jelly_move(왼쪽으로 헤엄) · jelly_blink · jelly_happy · jelly_sleepy · jelly_sleep
     const BUDDY_IMGS = ['cat_stand', 'cat_walk1', 'cat_walk2', 'cat_left', 'cat_front', 'cat_sit', 'cat_loaf', 'cat_sleep',
         'jelly_1', 'jelly_2', 'jelly_3', 'jelly_move', 'jelly_blink', 'jelly_happy', 'jelly_sleepy', 'jelly_sleep']
+    // 들려서 바둥거리는 그림 (따로 그린 게 있으면 씀, 없으면 위 그림을 흔들어서 대신)
+    const HELD_IMGS = ['cat_held1', 'cat_held2', 'jelly_held1', 'jelly_held2']
+    const HELD_PIVOT = { cat: [25, 21], jelly: [37, 3] }      // 바둥 그림에서 잡히는 점 (고양이 = 머리 위 · 해파리 = 갓 꼭대기)
     const IMG = {}
     function loadBuddies() {
         for (const n of BUDDY_IMGS) { const im = new Image(); im.src = 'assets/images/buddies/' + n + '.png'; IMG[n] = im }
+        for (const n of HELD_IMGS) {
+            try {                                                  // 없는 파일은 아예 안 부름 (콘솔에 오류가 안 뜨게)
+                const fs = require('fs'), path = require('path')
+                if (!fs.existsSync(path.join(__dirname, 'assets', 'images', 'buddies', n + '.png'))) continue
+            } catch (e) { /* 확인 못 하면 그냥 불러 봄 */ }
+            const im = new Image(); im.src = 'assets/images/buddies/' + n + '.png'; IMG[n] = im
+        }
     }
+    const ready = n => { const im = IMG[n]; return !!(im && im.complete && im.naturalWidth) }
     // 그림의 아래 가운데를 배경 좌표 (x, y) 에 맞춰 그림
     function drawImg(n, x, y, flip, sx, sy) {
         const im = IMG[n]
@@ -263,7 +275,9 @@
         ctx.setTransform(flip ? -1 : 1, 0, 0, 1, dx, 0)
         ctx.drawImage(im, -Math.round(w / 2), dy - h, w, h)
         ctx.setTransform(CS, 0, 0, CS, 0, 0)
+        drawn = { x0: x - w / 2 / CS, x1: x + w / 2 / CS, y0: y - h / CS, y1: y }      // 배경 좌표
     }
+    let drawn = null
 
     function shadow(x, y, ground) {
         const alt = Math.max(0, ground - y)
@@ -313,6 +327,8 @@
     }
 
     function updateBuddy(b, dt, tod, t) {
+        if (b.state === 'held') { updateHeld(b, dt); return }
+        if (b.state === 'fall') { updateFall(b, dt, t); return }
         const night = isNight(tod, b) && sleepsTonight(b)
         b.glow = b.kind === 'jelly' && isNight(tod, b) && !night
         const wantBed = night || t < b.napUntil
@@ -352,7 +368,10 @@
                 b.dir = Math.sign(d)
                 b.x += b.dir * Math.min(Math.abs(d), b.speed * dt)
             }
-        } else if (b.kind === 'jelly') b.vx *= Math.max(0, 1 - dt * 2)
+        } else if (b.kind === 'jelly') {                            // 멈춰 있을 때: 놓아준 뒤 남은 힘으로 살짝 떠밀려 감
+            b.vx *= Math.max(0, 1 - dt * 2)
+            b.x = clamp(b.x + b.vx * dt, 10, W - 10)
+        }
         if (b.kind === 'jelly') b.altNow += (b.alt - b.altNow) * Math.min(1, dt * 0.5)
     }
     function arrive(b) {
@@ -377,8 +396,10 @@
         const between = b.state === 'climb' || b.state === 'wake'
         const lift = b.hop * 7                                      // 침대 위 높이
         const hopArc = between ? Math.sin(b.hop * Math.PI) * 4 : 0
+        if (b.state === 'held') { drawHeld(b, t); return }
         if (b.kind === 'cat') {
             const y = GY - lift - hopArc
+            if (b.state === 'fall') { drawImg('cat_walk2', b.x, b.fy, b.fvx < 0); return }
             if (sleeping) { drawImg('cat_sleep', b.x, y + (Math.sin(t * 2) > 0.3 ? -0.34 : 0), false); drawZ(b.x - 10, y - 17, t, 0); return }
             if (between) { drawImg('cat_loaf', b.x, y, false); return }
             if (moving) {
@@ -387,7 +408,8 @@
                 return
             }
             const pose = b.pose || 'stand'
-            drawImg(pose === 'stand' ? (b.dir < 0 ? 'cat_left' : 'cat_stand') : 'cat_' + pose, b.x, y, false)
+            const sq = t < (b.squashUntil || 0)                      // 막 떨어져서 찌그러짐
+            drawImg(pose === 'stand' ? (b.dir < 0 ? 'cat_left' : 'cat_stand') : 'cat_' + pose, b.x, y, false, sq ? 1.14 : 1, sq ? 0.86 : 1)
         } else {
             // 공중에 둥실 (집 안에선 천장에 안 닿게 낮게), 침대로 갈 땐 천천히 내려앉음 · (x, yb) = 촉수 끝
             const inside = b.x > HOUSE.x0 && b.x < HOUSE.x1
@@ -408,6 +430,188 @@
             drawImg(n, b.x, yb, flip, sx, sy)
             if (sleeping) drawZ(b.x + 7, yb - 20, t, 0.5)
         }
+    }
+
+    // ------------------------------------------------------------ 잡기: 마우스로 집어 들면 바둥바둥
+    //  시작 화면에서 고양이 · 해파리를 누르고 있으면 들어 올림 (버튼 · 글자 위는 원래대로)
+    //  놓으면 고양이는 툭 떨어져서 착지, 해파리는 그 높이에서 천천히 원래 높이로 둥실
+    let held = null, suppressClick = false
+    const BLOCK = 'button, a, input, select, textarea, label, svg, [onclick], #frameBar, #image_seal_container, #user_content, '
+        + '#mediaContent, #launch_content, #launch_details, #server_status_wrapper, #newsContainer, #newsButton, #htBgm'
+
+    /** 화면 좌표 → 배경 좌표 (#bgScene 은 object-fit: cover · 아래 가운데 기준) */
+    function toScene(cx, cy) {
+        const r = cv.getBoundingClientRect()
+        const sc = Math.max(r.width / cv.width, r.height / cv.height)
+        const dw = cv.width * sc, dh = cv.height * sc
+        const ox = r.left + (r.width - dw) / 2, oy = r.top + (r.height - dh)
+        return { x: (cx - ox) / sc / CS, y: (cy - oy) / sc / CS }
+    }
+
+    function canGrab(e) {
+        const land = document.getElementById('landingContainer')
+        if (!land || getComputedStyle(land).display === 'none') return false
+        const main = document.getElementById('main')
+        if (main && main.hasAttribute('overlay')) return false
+        try { if (typeof newsActive !== 'undefined' && newsActive) return false } catch (ex) { /* 아직 없음 */ }
+        const tg = e.target
+        return !(tg && tg.closest && tg.closest(BLOCK))
+    }
+
+    function buddyAt(p) {
+        for (let i = buddies.length - 1; i >= 0; i--) {
+            const k = buddies[i].box
+            if (!k) continue
+            const ix = (k.x1 - k.x0) * 0.12, iy = (k.y1 - k.y0) * 0.06          // 그림 둘레 빈 곳은 빼고
+            if (p.x >= k.x0 + ix && p.x <= k.x1 - ix && p.y >= k.y0 + iy && p.y <= k.y1) return buddies[i]
+        }
+        return null
+    }
+
+    function setCursor(c) {
+        const r = document.documentElement
+        r.classList.toggle('ht-grab', c === 'grab')
+        r.classList.toggle('ht-grabbing', c === 'grabbing')
+    }
+
+    function grab(b, p) {
+        const k = b.box
+        held = { b, ax: p.x - (k.x0 + k.x1) / 2, ay: p.y - k.y1, mx: p.x, my: p.y, px: p.x, t0: performance.now() / 1000, vx: 0, swing: 0, sv: 0 }
+        b.state = 'held'; b.hop = 0; b.vx = 0; b.happyUntil = 0
+        setCursor('grabbing')
+        suppressClick = true
+    }
+
+    function drop() {
+        const h = held
+        held = null
+        setCursor('')
+        if (!h) return
+        const b = h.b, t = performance.now() / 1000
+        const ax = clamp(h.bx != null ? h.bx : h.mx - h.ax, 8, W - 8)            // 그림 아래 가운데
+        const ay = Math.min(GY, h.by != null ? h.by : h.my - h.ay)
+        b.x = ax
+        if (b.kind === 'cat') {
+            b.state = 'fall'; b.fy = ay; b.vy = 0; b.fvx = clamp(h.vx * 0.6, -90, 90)
+        } else {                                                    // 해파리: 놓은 높이에서 원래 높이로 천천히
+            b.altNow = (GY - ay) + 6 - (3 * Math.sin(t * 0.33 + b.seed) + Math.sin(t * 2.4 + b.seed) * 1.4)
+            b.vx = clamp(h.vx * 0.35, -22, 22)
+            b.state = 'idle'; b.timer = rnd(1.2, 2.5)
+        }
+    }
+
+    function updateHeld(b, dt) {
+        const h = held
+        if (!h || h.b !== b) { b.state = 'idle'; b.timer = 1; return }
+        const v = (h.mx - h.px) / Math.max(dt, 0.001)
+        h.px = h.mx
+        h.vx = h.vx * 0.6 + v * 0.4                                 // 놓을 때 던지는 힘
+        h.sv += (-h.swing * 38 - h.sv * 4.5 - v * 0.05) * dt       // 마우스를 휘두르면 대롱대롱
+        h.swing = clamp(h.swing + h.sv * dt, -0.9, 0.9)
+        b.x = h.mx - h.ax
+        b.yb = h.my - h.ay
+    }
+
+    function updateFall(b, dt, t) {
+        b.vy += 520 * dt
+        b.fy += b.vy * dt
+        b.x = clamp(b.x + b.fvx * dt, 8, W - 8)
+        b.fvx *= Math.max(0, 1 - dt * 2)
+        if (b.fy < GY) return
+        b.fy = GY
+        if (b.vy > 140) { b.vy = -b.vy * 0.28; b.fvx *= 0.6; b.squashUntil = t + 0.12; return }   // 통 튀기
+        b.state = 'idle'; b.timer = rnd(0.8, 1.6); b.pose = 'front'; b.hop = 0
+        b.squashUntil = t + 0.16
+    }
+
+    /** 들려 있는 친구: 잡은 곳을 중심으로 대롱대롱 + 버둥버둥 */
+    function drawHeld(b, t) {
+        const h = held
+        if (!h) return
+        const cat = b.kind === 'cat'
+        if (ready(cat ? 'cat_held1' : 'jelly_held1')) { drawHeldArt(b, t, h, cat); return }
+        const k = Math.floor(t * (cat ? 9 : 7)) % 2
+        let n
+        if (ready(cat ? 'cat_held1' : 'jelly_held1')) n = (cat ? 'cat_held' : 'jelly_held') + (k + 1)
+        else n = cat ? (k ? 'cat_walk1' : 'cat_walk2') : (k ? 'jelly_1' : 'jelly_3')
+        const im = IMG[n]
+        if (!ready(n)) return
+        const sx = cat ? 1 : 1 + Math.sin(t * 16) * 0.07, sy = cat ? 1.05 + Math.sin(t * 18) * 0.03 : 1 - Math.sin(t * 16) * 0.07
+        const w = im.naturalWidth * sx, hh = im.naturalHeight * sy
+        const ang = h.swing + (cat ? 0.17 : 0.24) * Math.sin(t * (cat ? 13 : 9))
+        const ax = b.x, ay = h.my - h.ay                            // 그림 아래 가운데 (배경 좌표)
+        shadow(ax, Math.min(GY, ay), GY)
+        ctx.setTransform(1, 0, 0, 1, 0, 0)
+        ctx.translate(h.mx * CS, h.my * CS)
+        ctx.rotate(ang)
+        ctx.drawImage(im, -w / 2 - h.ax * CS, -hh - h.ay * CS * sy, w, hh)
+        ctx.setTransform(CS, 0, 0, CS, 0, 0)
+        // 바둥바둥 표시: 양옆 짧은 선 + 튀는 물방울
+        const cy = ay - hh / CS / 2, half = w / CS / 2 + 2
+        for (let i = 0; i < 3; i++) {
+            const on = (Math.floor(t * 10) + i) % 2 === 0
+            if (!on) continue
+            R('rgba(255,255,255,0.85)', ax - half - 4 - i, cy - 4 + i * 4, 3, 1)
+            R('rgba(255,255,255,0.85)', ax + half + 1 + i, cy - 2 + i * 4, 3, 1)
+        }
+        for (let i = 0; i < 2; i++) {
+            const p = ((t - h.t0) * 1.6 + i * 0.5) % 1
+            const side = i ? 1 : -1
+            R(`rgba(170,220,255,${(0.9 * (1 - p)).toFixed(2)})`, ax + side * (half - 2 + p * 7), cy - hh / CS / 2 + 2 - Math.sin(p * Math.PI) * 5, 1, 2)
+        }
+        b.box = null
+    }
+
+    /** 바둥 전용 그림: 머리 위(갓 꼭대기)를 집은 채로 매달려 바둥 (땀방울 · 움직임 선은 그림에 있음) */
+    function drawHeldArt(b, t, h, cat) {
+        const k = Math.floor(t * (cat ? 8 : 6)) % 2
+        const n = (cat ? 'cat_held' : 'jelly_held') + (k + 1)
+        if (!ready(n)) return
+        const im = IMG[n], [px, py] = HELD_PIVOT[cat ? 'cat' : 'jelly']
+        const sx = cat ? 1 : 1 + Math.sin(t * 12) * 0.035, sy = cat ? 1 : 1 - Math.sin(t * 12) * 0.035
+        const w = im.naturalWidth * sx, hh = im.naturalHeight * sy
+        const ang = h.swing + (cat ? 0.08 : 0.1) * Math.sin(t * (cat ? 11 : 8))
+        h.bx = h.mx + (w / 2 - px * sx) / CS                        // 그림 아래 가운데 (놓을 때 · 그림자)
+        h.by = h.my + (hh - py * sy) / CS
+        b.x = h.bx; b.yb = h.by
+        shadow(h.bx, Math.min(GY, h.by), GY)
+        ctx.setTransform(1, 0, 0, 1, 0, 0)
+        ctx.translate(h.mx * CS, h.my * CS)
+        ctx.rotate(ang)
+        ctx.drawImage(im, -px * sx, -py * sy, w, hh)
+        ctx.setTransform(CS, 0, 0, CS, 0, 0)
+        b.box = null
+    }
+
+    function bindGrab() {
+        const st = document.createElement('style')
+        st.textContent = 'html.ht-grab, html.ht-grab * { cursor: grab !important; } html.ht-grabbing, html.ht-grabbing * { cursor: grabbing !important; }'
+        document.head.appendChild(st)
+        window.addEventListener('mousedown', e => {
+            if (held || e.button !== 0 || !cv || !canGrab(e)) return
+            const p = toScene(e.clientX, e.clientY), b = buddyAt(p)
+            if (!b) return
+            e.preventDefault(); e.stopPropagation()
+            grab(b, p)
+        }, true)
+        window.addEventListener('mousemove', e => {
+            if (!cv) return
+            const p = toScene(e.clientX, e.clientY)
+            if (held) {
+                held.mx = clamp(p.x, 0, W); held.my = clamp(p.y, 4, H)
+                e.preventDefault()
+                return
+            }
+            setCursor(canGrab(e) && buddyAt(p) ? 'grab' : '')
+        }, true)
+        window.addEventListener('mouseup', e => {
+            if (!held) return
+            e.preventDefault(); e.stopPropagation()
+            drop()
+            setTimeout(() => { suppressClick = false }, 0)
+        }, true)
+        window.addEventListener('click', e => { if (suppressClick) { e.preventDefault(); e.stopPropagation(); suppressClick = false } }, true)
+        window.addEventListener('blur', () => { if (held) drop() })
     }
 
     // 반딧불이 (밤)
@@ -471,7 +675,8 @@
         ctx.drawImage(groundCv, 0, GY)
         drawFarm(t, days)
         drawFlowers(t)
-        for (const b of buddies) drawBuddy(b, t)
+        for (const b of buddies) if (b.state !== 'held') { drawn = null; drawBuddy(b, t); b.box = drawn }
+        for (const b of buddies) if (b.state === 'held') drawBuddy(b, t)          // 들고 있는 친구는 맨 위에
         drawNight(s, t, tod)
     }
 
@@ -496,12 +701,13 @@
         nv = document.createElement('canvas'); nv.width = W; nv.height = H; nctx = nv.getContext('2d')
         buildGround()
         loadBuddies()
+        bindGrab()
         // 켰을 때 밤이면 처음부터 침대에서 자고 있음
         for (const b of buddies) if (isNight(gameDays() % 1, b) && sleepsTonight(b)) { b.x = b.bedX; b.state = 'sleep'; b.hop = 1; b.dir = 1 }
         requestAnimationFrame(loop)
     }
 
-    window.HealingScene = { start }
+    window.HealingScene = { start, buddies }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start)
     else start()
 })()

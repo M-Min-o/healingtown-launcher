@@ -8,20 +8,7 @@
 /* global ConfigManager */
 const HTBgm = (() => {
     const MAX_GAIN = 0.6                     // 100% 일 때 실제 크기 (곡 자체가 꽤 커서 조금 줄여 둠)
-    // 런처는 ejs-electron 이 file: 주소를 통째로 가로채서 주는데, 이렇게 받은 소리 파일은 크롬이 못 틀어줌
-    // (MEDIA_ELEMENT_ERROR: Format error) → 파일을 직접 읽어서 blob 주소로 넘김 (반복 재생 · 되감기도 됨)
-    function source(){
-        try {
-            const fs = require('fs'), p = require('path')
-            const buf = fs.readFileSync(p.join(__dirname, 'assets', 'audio', 'healingtown-bgm.ogg'))
-            return URL.createObjectURL(new Blob([buf], { type: 'audio/ogg' }))
-        } catch(e) {
-            console.warn('[배경 음악] 파일을 직접 못 읽어서 주소로 엽니다.', e)
-            return './assets/audio/healingtown-bgm.ogg'
-        }
-    }
-    const audio = new Audio(source())
-    audio.addEventListener('error', () => console.warn('[배경 음악] 재생 오류', audio.error && audio.error.code, audio.error && audio.error.message))
+    const audio = new Audio('./assets/audio/healingtown-bgm.ogg')
     audio.loop = true
     audio.preload = 'auto'
     audio.volume = 0
