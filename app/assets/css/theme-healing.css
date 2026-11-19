@@ -392,3 +392,62 @@ input:checked + .toggleSwitchSlider { background-color: #2e8b3e !important; }
 #settingsBgmVolumeText { min-width: 38px; color: var(--cream); font-size: 13px; }
 #settingsComfortContainer { margin-bottom: 18px; }
 #settingsComfortContainer .settingsFieldContainer { width: auto; padding: 6px 0; }
+
+/* ---------------------------------------------------------------- 런처 업데이트 버튼 (htupdate.js) - 시작 화면 오른쪽 아래, 게임 시작 위 */
+#htUpdate {
+    position: absolute; right: 22px; bottom: calc(100% + 16px); z-index: 20;
+    display: flex; flex-direction: column; align-items: stretch;
+}
+#htUpdateBtn {
+    display: flex; align-items: center; gap: 10px; padding: 6px 12px; margin: 0;
+    font-family: inherit; text-align: left; cursor: pointer; border: none; border-radius: 0;
+    color: var(--cream); background: rgba(13, 21, 48, 0.88); box-shadow: var(--frame);
+    transition: filter .15s, transform .08s;
+}
+#htUpdateBtn:hover:not(:disabled) { filter: brightness(1.2); }
+#htUpdateBtn:active:not(:disabled) { transform: translateY(2px); }
+#htUpdateBtn:disabled { cursor: default; }
+#htUpdateIcon { display: flex; color: var(--bronze-l); }
+#htUpdateTexts { display: flex; flex-direction: column; gap: 2px; }
+#htUpdateText { font-size: 16px; line-height: 16px; white-space: nowrap; text-shadow: 2px 2px 0 var(--ink); }
+#htUpdateSub { font-size: 13px; line-height: 14px; white-space: nowrap; color: var(--muted); }
+#htUpdateBar { height: 6px; margin-top: 6px; background: var(--navy-d); box-shadow: 0 0 0 2px var(--bronze-d); display: none; }
+#htUpdateFill { height: 100%; width: 0; background: linear-gradient(to bottom, var(--bronze-l) 0 50%, var(--bronze) 50% 100%); transition: width .4s ease; }
+
+/* 평소: 작고 흐리게 (마우스를 올리면 또렷하게) */
+#htUpdate.idle #htUpdateBtn, #htUpdate.latest #htUpdateBtn, #htUpdate.checking #htUpdateBtn {
+    padding: 4px 10px; background: rgba(13, 21, 48, 0.6); box-shadow: 0 0 0 2px var(--bronze-d), 0 0 0 4px rgba(42, 22, 10, 0.6);
+}
+#htUpdate.idle, #htUpdate.latest, #htUpdate.checking { opacity: .78; transition: opacity .15s; }
+#htUpdate.idle:hover, #htUpdate.latest, #htUpdate.checking { opacity: 1; }
+#htUpdate.idle #htUpdateText, #htUpdate.checking #htUpdateText { font-size: 13px; line-height: 14px; color: var(--cream); }
+#htUpdate.idle #htUpdateSub { color: var(--bronze-l); }
+#htUpdate.idle #htUpdateIcon, #htUpdate.checking #htUpdateIcon { color: var(--muted); }
+#htUpdate.latest #htUpdateIcon { color: var(--good); }
+#htUpdate.latest #htUpdateText { font-size: 13px; line-height: 14px; color: var(--good); }
+
+/* 받는 중: 막대 */
+#htUpdate.downloading #htUpdateBar { display: block; }
+
+/* 다 받음: 반짝이는 청동 버튼 */
+#htUpdate.ready #htUpdateBtn, #htUpdate.mac #htUpdateBtn {
+    color: var(--ink);
+    background: linear-gradient(to bottom, var(--bronze-l) 0%, var(--bronze-l) 48%, var(--bronze) 50%, var(--bronze) 100%);
+    box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.35), inset 0 -3px 0 var(--bronze-d), 0 0 0 2px var(--ink), 0 4px 0 2px var(--ink);
+    animation: htUpdGlow 1.6s ease-in-out infinite;
+}
+#htUpdate.ready #htUpdateText, #htUpdate.mac #htUpdateText { text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.35); }
+#htUpdate.ready #htUpdateSub, #htUpdate.mac #htUpdateSub { color: var(--ink); opacity: .72; }
+#htUpdate.ready #htUpdateIcon, #htUpdate.mac #htUpdateIcon { color: var(--ink); }
+#htUpdate.ready #htUpdateBtn:disabled { animation: none; filter: saturate(.6); }
+@keyframes htUpdGlow {
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(1.18) drop-shadow(0 0 6px rgba(240, 201, 106, 0.75)); }
+}
+
+/* 실패 */
+#htUpdate.error #htUpdateIcon, #htUpdate.error #htUpdateText { color: var(--bad); }
+
+/* 돌아가는 아이콘 (확인 · 받는 중) */
+.htUpdSpin { animation: htUpdSpin 1s steps(8) infinite; }
+@keyframes htUpdSpin { to { transform: rotate(360deg); } }

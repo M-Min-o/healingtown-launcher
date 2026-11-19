@@ -95,6 +95,8 @@ if(!isDev){
                 loggerAutoUpdater.info('Unknown argument', arg)
                 break
         }
+        // 시작 화면 오른쪽 아래 업데이트 버튼 (htupdate.js)
+        if(typeof HTUpdate !== 'undefined') HTUpdate.notify(arg, info)
     })
 }
 
@@ -114,7 +116,7 @@ function changeAllowPrerelease(val){
  * 새 버전 알림 창
  *  1) 새 버전을 찾자마자 (available): "받는 중 N%" + [다 받으면 설치] [나중에]
  *  2) 다 받으면 (downloaded): 창이 떠 있으면 [지금 설치] 로 바뀜 · [다 받으면 설치] 를 눌러 뒀으면 바로 설치
- *  - '나중에' 를 누르면 다시 안 물어봄 (왼쪽 위 엠블럼 · 설정 → 업데이트에서 설치, 런처를 끌 때 자동 설치)
+ *  - '나중에' 를 누르면 다시 안 물어봄 (시작 화면 오른쪽 아래 업데이트 버튼 · 설정 → 업데이트에서 설치, 런처를 끌 때 자동 설치)
  *  - 다른 창(로그인 등)이 떠 있으면 닫힐 때까지 기다렸다가 띄움
  */
 const updatePopup = { open: false, dismissed: false, installWhenReady: false, downloaded: false, waiting: false, info: null, percent: 0 }
@@ -130,7 +132,7 @@ function renderUpdatePopup(){
     if(u.downloaded){
         setOverlayContent(
             '새 버전이 준비됐어요!',
-            `힐링타운 런처 <b>${v}</b> 버전을 다 받았어요.<br>지금 설치하면 런처가 잠깐 꺼졌다가 다시 켜집니다.<br><br>나중에 설치하려면 왼쪽 위 엠블럼을 누르거나, 런처를 끌 때 자동으로 설치됩니다.`,
+            `힐링타운 런처 <b>${v}</b> 버전을 다 받았어요.<br>지금 설치하면 런처가 잠깐 꺼졌다가 다시 켜집니다.<br><br>나중에 설치하려면 시작 화면 오른쪽 아래 <b>지금 업데이트</b> 버튼을 누르거나, 런처를 끌 때 자동으로 설치됩니다.`,
             '지금 설치',
             '나중에'
         )
@@ -146,6 +148,7 @@ function renderUpdatePopup(){
         setOverlayHandler(() => {
             if(u.installWhenReady) return
             u.installWhenReady = true
+            if(typeof HTUpdate !== 'undefined') HTUpdate.setInstallWhenReady(true)
             renderUpdatePopup()
         })
     }
@@ -154,6 +157,7 @@ function renderUpdatePopup(){
         u.open = false
         u.dismissed = true
         u.installWhenReady = false
+        if(typeof HTUpdate !== 'undefined') HTUpdate.setInstallWhenReady(false)
     })
 }
 
